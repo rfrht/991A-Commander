@@ -23,8 +23,25 @@ send_command() {
 }
 
 get_ptt() {
-	send_command TX
-	XMIT_STATE=${OUTPUT:2}
+	send_command RIA
+	XMIT_STATE=${OUTPUT:3}
+	case $XMIT_STATE in
+		0)
+			send_command BY
+			case ${OUTPUT:2:1} in
+				0)
+					ST_TX=Squelched
+				;;
+				1)
+					ST_TX=RX
+				;;
+			esac
+		;;
+		1)
+			ST_TX=TX
+		;;
+	esac
+
 }
 
 get_qrg() {
@@ -135,14 +152,32 @@ get_qrg() {
 			ST_MODE=C4FM
 		;;
 		esac
-	echo "Source VFO: $ST_VFO_SOURCE | QRG: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memory: $ST_MCHAN \|; fi) Mode: $ST_MODE "
-	echo "Clarifier: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR | Tone/DCS: $ST_TONE_TYPE | Shift: $ST_SHIFT_TYPE"
+
+	send_command LK
+	case ${OUTPUT:2} in
+		0)
+			ST_LOCK=Unlocked
+		;;
+		1)
+			ST_LOCK=Locked
+	esac
+
+#	if [ $ST_MODE_ID == 4 ] ; then
+#		send_command LK
+#		case ${OUTPUT:2} in
+#			0)
+#				ST_LOCK=Unlocked
+#			;;
+#			1)
+#				ST_LOCK=Locked
+#		esac
+#	fi
+
 }
 
 get_smeter() {
 	send_command SM0
 	ST_SMETER=${OUTPUT:3}
-	echo "S-meter: $ST_SMETER"
 }
 
 get_txdata() {
@@ -158,19 +193,39 @@ get_txdata() {
 	ST_IDD=${OUTPUT:3}
 	send_command RM8
 	ST_VDD=${OUTPUT:3}
+}
+
+print_header(){
+	echo "Source VFO: $ST_VFO_SOURCE | QRG: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memory: $ST_MCHAN \|; fi) Mode: $ST_MODE | State: $ST_TX"
+	if [[ $ST_TONE_ID != 0 && $ST_MODE_ID == 4 ]] ; then
+		 echo "Tone/DCS: $ST_TONE_TYPE | RPT Shift: $ST_SHIFT_TYPE "
+	fi
+	echo "VFO Lock: $ST_LOCK | Clarifier: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR"
+}
+
+print_rx(){
+	clear
+	print_header
+	echo "S-meter: $ST_SMETER"
+}
+
+print_tx(){
+	clear
+	print_header
 	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | VSWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
 }
 
 while true ; do
-	clear
 	get_ptt
 
 	if [ $XMIT_STATE == 0 ] ; then
 		get_qrg
 		get_smeter
+		print_rx
 	else
 		get_qrg
 		get_txdata
+		print_tx
 	fi
 	sleep .4
 done
