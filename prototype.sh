@@ -22,7 +22,7 @@ send_command() {
 
 get_ptt() {
 	send_command TX
-	PTT_ID=${OUTPUT:2}
+	XMIT_STATE=${OUTPUT:2}
 }
 
 get_chan() {
@@ -133,11 +133,14 @@ get_chan() {
 			ST_MODE=C4FM
 		;;
 		esac
+	echo "Origem VFO: $ST_VFO_SOURCE | Frequencia: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memoria: $ST_MCHAN \|; fi) Modo: $ST_MODE "
+	echo "Clarificador: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR | Subtom: $ST_TONE_TYPE | Shift: $ST_SHIFT_TYPE"
 }
 
 get_smeter() {
 	send_command SM0
 	ST_SMETER=${OUTPUT:3}
+	echo "S-meter: $ST_SMETER"
 }
 
 get_txdata() {
@@ -153,17 +156,16 @@ get_txdata() {
 	ST_IDD=${OUTPUT:3}
 	send_command RM8
 	ST_VDD=${OUTPUT:3}
+	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | SWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
 }
 
 get_ptt
-if [ $PTT_ID == 0 ] ; then
+
+if [ $XMIT_STATE == 0 ] ; then
 	get_chan
 	get_smeter
-	echo "Origem VFO: $ST_VFO_SOURCE | Frequencia: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memoria: $ST_MCHAN \|; fi) Modo: $ST_MODE "
-	echo "Clarificador: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR | Subtom: $ST_TONE_TYPE | Shift: $ST_SHIFT_TYPE"
-	echo "S-meter: $ST_SMETER"
 else
+	get_chan
 	get_txdata
-	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | SWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
 fi
 
