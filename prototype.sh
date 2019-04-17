@@ -1,17 +1,19 @@
 #!/bin/bash
-clear
 DEVICE=/dev/ttyUSB0
 
 config_device(){
-	DEVICE=$(for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do     (         syspath="${sysdevpath%/dev}";         devname="$(udevadm info -q name -p $syspath)";         [[ "$devname" == "bus/"* ]] && continue;         eval "$(udevadm info -q property --export -p $syspath)";         [[ -z "$ID_SERIAL" ]] && continue;         echo "/dev/$devname - $ID_SERIAL";     ); done | grep -m 1 CP2105 | awk '{print $1}')
+	DEVICE=$(for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do \
+		(syspath="${sysdevpath%/dev}" ; devname="$(udevadm info -q name -p $syspath)" ; \
+		[[ "$devname" == "bus/"* ]] && continue ; eval "$(udevadm info -q property --export -p $syspath)" ; \
+		[[ -z "$ID_SERIAL" ]] && continue ; echo "/dev/$devname - $ID_SERIAL" ; ) ; \
+		done | grep -m 1 CP2105 | awk '{print $1}')
 
 	if [ -z $DEVICE ] ; then
-	   echo "Dispositivo nao conectado"
+	   echo "FT-991A not connected"
    	   exit 1
 	fi
 
 stty -F $DEVICE 38400
-
 }
 
 
@@ -25,7 +27,7 @@ get_ptt() {
 	XMIT_STATE=${OUTPUT:2}
 }
 
-get_chan() {
+get_qrg() {
 	send_command IF
 	ST_MCHAN=${OUTPUT:2:3}
 	ST_VFOA=${OUTPUT:5:9}
@@ -133,8 +135,8 @@ get_chan() {
 			ST_MODE=C4FM
 		;;
 		esac
-	echo "Origem VFO: $ST_VFO_SOURCE | Frequencia: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memoria: $ST_MCHAN \|; fi) Modo: $ST_MODE "
-	echo "Clarificador: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR | Subtom: $ST_TONE_TYPE | Shift: $ST_SHIFT_TYPE"
+	echo "Source VFO: $ST_VFO_SOURCE | QRG: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | $(if [ $ST_RX_SRC_ID == 1 ] ; then echo Memory: $ST_MCHAN \|; fi) Mode: $ST_MODE "
+	echo "Clarifier: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_TX_CLAR | Tone/DCS: $ST_TONE_TYPE | Shift: $ST_SHIFT_TYPE"
 }
 
 get_smeter() {
@@ -156,16 +158,20 @@ get_txdata() {
 	ST_IDD=${OUTPUT:3}
 	send_command RM8
 	ST_VDD=${OUTPUT:3}
-	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | SWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
+	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | VSWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
 }
 
-get_ptt
+while true ; do
+	clear
+	get_ptt
 
-if [ $XMIT_STATE == 0 ] ; then
-	get_chan
-	get_smeter
-else
-	get_chan
-	get_txdata
-fi
+	if [ $XMIT_STATE == 0 ] ; then
+		get_qrg
+		get_smeter
+	else
+		get_qrg
+		get_txdata
+	fi
+	sleep .4
+done
 
