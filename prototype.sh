@@ -26,22 +26,13 @@ get_ptt() {
 	send_command RIA
 	XMIT_STATE=${OUTPUT:3}
 	case $XMIT_STATE in
-		0)
-			send_command BY
+		0) send_command BY ;
 			case ${OUTPUT:2:1} in
-				0)
-					ST_TX=Squelched
-				;;
-				1)
-					ST_TX=RX
-				;;
-			esac
-		;;
-		1)
-			ST_TX=TX
-		;;
+				0) ST_TX=Squelched ;;
+				1) ST_TX=RX ;;
+			esac ;;
+		1) ST_TX=TX ;;
 	esac
-
 }
 
 get_qrg() {
@@ -56,123 +47,47 @@ get_qrg() {
 	ST_TONE_ID=${OUTPUT:23:1}
 	ST_SHIFT_ID=${OUTPUT:26:1}
 	case $ST_SHIFT_ID in
-		0)
-			ST_SHIFT_TYPE=Simplex
-		;;
-		1)
-			ST_SHIFT_TYPE="+"
-		;;
-		2)
-			ST_SHIFT_TYPE="-"
-		;;
+		0) ST_SHIFT_TYPE=Simplex ;; 
+		1) ST_SHIFT_TYPE="+" ;; 
+		2) ST_SHIFT_TYPE="-" ;; 
 	esac
 	case $ST_TONE_ID in
-		0)
-			ST_TONE_TYPE=Off
-		;;
-		1)
-			ST_TONE_TYPE="Tone Enc/Dec"
-		;;
-		2)
-			ST_TONE_TYPE="Tone Enc"
-		;;
-		3)
-			ST_TONE_TYPE="DCS Enc/Dec"
-		;;
-		4)
-			ST_TONE_TYPE="DCS Enc"
-		;;
+		0) ST_TONE_TYPE=Off ;; 
+		1) ST_TONE_TYPE="Tone Enc/Dec" ;; 
+		2) ST_TONE_TYPE="Tone Enc" ;; 
+		3) ST_TONE_TYPE="DCS Enc/Dec" ;; 
+		4) ST_TONE_TYPE="DCS Enc" ;; 
 	esac
-
 	case $ST_RX_SRC_ID in
-		0)
-			ST_VFO_SOURCE=VFO
-		;;
-		1)
-			ST_VFO_SOURCE=Memory
-		;;
-		2)
-			ST_VFO_SOURCE=M-Tune
-		;;
-		3)
-			ST_VFO_SOURCE=QMB
-		;;
-		4)
-			ST_VFO_SOURCE=QMB-M-Tune
-		;;
-		5)
-			ST_VFO_SOURCE=PMS
-		;;
-		6)
-			ST_VFO_SOURCE=Home
-		;;
+		0) ST_VFO_SOURCE=VFO ;; 
+		1) ST_VFO_SOURCE=Memory ;; 
+		2) ST_VFO_SOURCE=M-Tune ;; 
+		3) ST_VFO_SOURCE=QMB ;; 
+		4) ST_VFO_SOURCE=QMB-M-Tune ;; 
+		5) ST_VFO_SOURCE=PMS ;; 
+		6) ST_VFO_SOURCE=Home ;; 
 	esac
-
 	case $ST_MODE_ID in
-		1)
-			ST_MODE=LSB
-		;;
-		2)
-			ST_MODE=USB
-		;;
-		3)
-			ST_MODE=CW
-		;;
-		4)
-			ST_MODE=FM
-		;;
-		5)
-			ST_MODE=AM
-		;;
-		6)
-			ST_MODE=RTTY-LSB
-		;;
-		7)
-			ST_MODE=CW-R
-		;;
-		8)
-			ST_MODE=DATA-LSB
-		;;
-		9)
-			ST_MODE=RTTY-USB
-		;;
-		A)
-			ST_MODE=DATA-FM
-		;;
-		B)
-			ST_MODE=FM-N
-		;;
-		C)
-			ST_MODE=DATA-USB
-		;;
-		D)
-			ST_MODE=AM-M
-		;;
-		E)
-			ST_MODE=C4FM
-		;;
+		1) ST_MODE=LSB ;; 
+		2) ST_MODE=USB ;; 
+		3) ST_MODE=CW ;; 
+		4) ST_MODE=FM ;; 
+		5) ST_MODE=AM ;; 
+		6) ST_MODE=RTTY-LSB ;; 
+		7) ST_MODE=CW-R ;; 
+		8) ST_MODE=DATA-LSB ;; 
+		9) ST_MODE=RTTY-USB ;; 
+		A) ST_MODE=DATA-FM ;; 
+		B) ST_MODE=FM-N ;; 
+		C) ST_MODE=DATA-USB ;; 
+		D) ST_MODE=AM-N ;; 
+		E) ST_MODE=C4FM ;; 
 		esac
-
 	send_command LK
 	case ${OUTPUT:2} in
-		0)
-			ST_LOCK=Unlocked
-		;;
-		1)
-			ST_LOCK=Locked
+		0) ST_LOCK=Unlocked ;; 
+		1) ST_LOCK=Locked
 	esac
-
-#	if [ $ST_MODE_ID == 4 ] ; then
-#		send_command LK
-#		case ${OUTPUT:2} in
-#			0)
-#				ST_LOCK=Unlocked
-#			;;
-#			1)
-#				ST_LOCK=Locked
-#		esac
-#	fi
-
 }
 
 get_smeter() {
@@ -229,4 +144,3 @@ while true ; do
 	fi
 	sleep .4
 done
-
