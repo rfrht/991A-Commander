@@ -53,13 +53,17 @@ serial_config(){
 	fi
 }
 
+print_error() {
+	echo -n "$(tput setab 7)$(tput setaf 1) $@ $(tput sgr0)"
+}
+
 send_silent() {
 	echo -n "$1;" > $DEVICE
 }
 
 send_command() {
 	echo -n "$1;" > $DEVICE &
-	read -t 1 -d ';' OUTPUT <$DEVICE || serial_config
+	read -t 1 -d ';' OUTPUT < $DEVICE || serial_config
 }
 
 get_ptt() {
@@ -83,11 +87,11 @@ get_qrg() {
 	ST_MODE_ID=${OUTPUT:21:1}
 	ST_RX_SRC_ID=${OUTPUT:22:1}
 	ST_TONE_ID=${OUTPUT:23:1}
-	ST_SHIFT_ID=${OUTPUT:26:1}
+	ST_RX_SHIFT_ID=${OUTPUT:26:1}
 
-	case $ST_SHIFT_ID in
-	0) ST_SHIFT_TYPE=Simplex ;;	1) ST_SHIFT_TYPE="+" ;;
-	2) ST_SHIFT_TYPE="-" ;;
+	case $ST_RX_SHIFT_ID in
+	0) ST_RX_SHIFT_TYPE=Simplex ;;	1) ST_RX_SHIFT_TYPE="+" ;;
+	2) ST_RX_SHIFT_TYPE="-" ;;
 	esac
 
 	case $ST_TONE_ID in
@@ -112,7 +116,6 @@ get_qrg() {
 	esac
 
 	send_command LK
-
 	case ${OUTPUT:2} in
 	0) ST_LOCK=Unlocked ;;	1) ST_LOCK=Locked
 	esac
@@ -122,8 +125,24 @@ get_qrg() {
 	esac
 }
 
+get_txpower() {
+	send_command PC ; TX_POWER=${OUTPUT:3}
+}
+
 get_smeter() {
 	send_command SM0 ; ST_SMETER=${OUTPUT:3}
+}
+
+
+check_swr() {
+	send_command RI0
+	if [ $OUTPUT == "RI01" ] ; then
+		# Drop maximum power to 5W
+		send_silent PC005
+		SWR_STATE=HIGH
+	else
+		SWR_STATE=NOMINAL
+	fi
 }
 
 get_txdata() {
@@ -135,10 +154,18 @@ get_txdata() {
 	send_command RM8 ; ST_VDD=${OUTPUT:3}
 }
 
+get_txsecs() {
+	if [[ $TX_ON == 0 || -z $TX_ON ]] ; then
+		TX_ON=$(/usr/bin/date +%s)
+	fi
+	NOW=$(date +%s)
+	TX_TIME=$(date -u -d @$(($NOW-$TX_ON)) +%T)
+}
+
 print_header(){
 	echo "Source VFO: $ST_VFO_SOURCE | QRG: $(echo $ST_VFOA | numfmt  --suffix=Hz --grouping) | Mode: $ST_MODE | State: $ST_TX"
 	if [[ $ST_TONE_ID != 0 && $ST_MODE_ID == 4 ]] ; then
-		 echo -n "Tone/DCS: $ST_TONE_TYPE | RPT Shift: $ST_SHIFT_TYPE "
+		 echo -n "Tone/DCS: $ST_TONE_TYPE | RPT Shift: $ST_RX_SHIFT_TYPE "
 	fi
 	if [ $ST_RX_SRC_ID == 1 ] ; then 
 		echo "| Memory: $ST_MCHAN | Name: $ST_MTAG"
@@ -156,19 +183,27 @@ print_tx(){
 	clear
 	print_header
 	echo "Compressor: $ST_COMP | ALC: $ST_ALC | Power Output: $ST_PO | VSWR: $ST_SWR | IDD: $ST_IDD | VDD: $ST_VDD"
+	if [ $SWR_STATE == "HIGH" ] ; then 
+		print_error HIGH SWR
+	fi
+	echo "TX time: $TX_TIME | TX Power: $TX_POWER W"
 }
 
 while true ; do
 	get_ptt
 
 	if [ $XMIT_STATE == 0 ] 2>/dev/null ; then
+		TX_ON=0
 		get_qrg
 		get_smeter
 		print_rx
 	else
 		get_qrg
+		get_txpower
 		get_txdata
+		get_txsecs
+		check_swr
 		print_tx
 	fi
-	sleep 0.5
+	sleep 0.4
 done
