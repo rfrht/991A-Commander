@@ -190,6 +190,22 @@ print_tx(){
 }
 
 while true ; do
+	case $1 in
+		--smeter)
+		get_ptt
+		if [ $XMIT_STATE == 0 ] 2>/dev/null ; then
+			get_smeter
+			echo $((10#$ST_SMETER*100/190))
+			echo "# S-Meter"
+		else
+			get_txdata
+			echo $ST_SWR
+			echo "# SWR"
+		fi
+		sleep .4
+	;;
+
+	*)
 	get_ptt
 
 	if [ $XMIT_STATE == 0 ] 2>/dev/null ; then
@@ -206,4 +222,6 @@ while true ; do
 		print_tx
 	fi
 	sleep 0.4
+	;;
+	esac
 done
