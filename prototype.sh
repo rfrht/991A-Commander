@@ -176,7 +176,7 @@ print_header(){
 	if [[ $ST_TONE_ID != 0 && $ST_MODE_ID == 4 ]] ; then
 		 echo -n "Tone/DCS: $ST_TONE_TYPE | RPT Shift: $ST_RX_SHIFT_TYPE "
 	fi
-	if [ $ST_RX_SRC_ID == 1 ] ; then 
+	if [ $ST_RX_SRC_ID == 1 ] 2>/dev/null ; then 
 		echo "| Memory: $ST_MCHAN | Name: $ST_MTAG"
 	fi
 	echo "VFO Lock: $ST_LOCK | Clarifier: $ST_CLAR | RX Clar: $ST_RX_CLAR | TX Clar: $ST_RADIO_CLAR"
@@ -222,7 +222,7 @@ while true ; do
 	*)
 	get_ptt
 
-	if [ $XMIT_STATE == 0 ] 2>/dev/null ; then
+	if [ $ST_RADIO != "TX" ] 2>/dev/null ; then
 		get_qrg
 		get_smeter
 		if [ $ST_RADIO == "RX" ] ; then
