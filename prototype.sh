@@ -66,6 +66,63 @@ send_command() {
 	read -t 1 -d ';' OUTPUT < $DEVICE || serial_config
 }
 
+dump_chan_memory() {
+	send_silent MC001
+
+	if [ -e /dev/shm/ft991a-channel-dump.txt ] ; then
+		rm -f /dev/shm/ft991a-channel-dump.txt || exit 1
+	fi
+
+	echo "Dumping memories; takes a while."
+
+	for i in {001..117} ; do 
+		echo -n "MT$i;" > $DEVICE & read -t 0.1 -N 41  OUTPUT < $DEVICE
+		echo -n "$OUTPUT" | sed -e "s/MT001/MT$i/g" >> /dev/shm/ft991a-channel-dump.txt
+	done
+
+	echo "Dumped memories in /dev/shm/ft991a-channel-dump.txt"
+}
+
+dump_config() {
+	if [ -e /dev/shm/ft991a-config.txt ] ; then
+		rm -f /dev/shm/ft991a-config.txt || exit 1
+	fi
+
+	echo "Dumping config in /dev/shm/ft991a-config.txt"
+
+	for i in {001..153} ; do 
+		echo -n "EX$i;" > $DEVICE & read -t 0.1 -d ';'  OUTPUT < $DEVICE
+		echo "$OUTPUT;" >> /dev/shm/ft991a-config.txt
+	done
+
+	echo "Dumped config in /dev/shm/ft991a-config.txt"
+}
+
+restore_memories() {
+	if [ ! -r /dev/shm/ft991a-channel-dump.txt ] ; then
+		echo "Could not find/read the /dev/shm/ft991a-channel-dump.txt file"
+		exit 1
+	fi
+
+	cat /dev/shm/ft991a-channel-dump.txt > $DEVICE
+
+	echo "Memories loaded."
+}
+
+restore_config() {
+        if [ ! -r /dev/shm/ft991a-config.txt ] ; then
+                echo "Could not find/read the /dev/shm/ft991a-config.txt file"
+                exit 1
+        fi
+
+	for i in $(cat /dev/shm/ft991a-config.txt) ; do
+		echo -n $i > $DEVICE
+		sleep 0.1
+	done
+
+	echo "Configuration loaded."
+}
+
 get_ptt() {
 	send_command RIA ; XMIT_STATE=${OUTPUT:3}
 	case $XMIT_STATE in
@@ -202,6 +259,19 @@ print_timer(){
 	echo " | $ST_RADIO time: $TIMER"
 }
 
+case $1 in
+	--backup)
+	dump_chan_memory
+	dump_config
+	exit 0
+	;;
+
+	--restore)
+	restore_memories
+	restore_config
+	exit 0
+	;;
+esac
 
 while true ; do
 	case $1 in
