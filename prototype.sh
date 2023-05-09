@@ -25,10 +25,10 @@ serial_config(){
 	echo "Identified device $DEVICE"
 
 	# Set port speed
-	if ! stty -F $DEVICE 38400 ; then
+	if ! stty -ixon -F $DEVICE 38400 ; then
 		echo "Failed to configure port, retrying in 20s" 
 		sleep 20
-		if ! stty -F $DEVICE 38400 ; then
+		if ! stty -ixon -F $DEVICE 38400 ; then
 			echo "Failed to config serial port"
 			exit 1
 		fi
