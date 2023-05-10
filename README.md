@@ -71,6 +71,6 @@ Run `./spw.sh 012a 0073` - That should do the magic and put your radio on the wa
 
 And conversely, to recall the buttons mode, use `./spw.sh 012a 8073`
 
-Be careful, take note of the values and remember that any typo can be **fatal**.
+Be careful, take note of the values and remember that any typo can be **fatal**. The provided code has no safeguards.
 
 Happy hacking!
