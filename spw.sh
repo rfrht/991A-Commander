@@ -1,14 +1,16 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Thanks to Gil Kloepfer (KI5BPK) for the hard work mapping the
 # FT-991/A address space - and troubleshooting my code!
 
-echo
-echo "THIS CAN ==AND WILL==  BRICK YOUR RADIO BEYOND REPAIR"
-echo
-echo "If you *really really* know what you are doing, move ahead"
-echo
-exit 1
+if [ -z $IKNOWRIGHT ] ; then
+  echo
+  echo "THIS CAN ==AND WILL==  BRICK YOUR RADIO BEYOND REPAIR"
+  echo
+  echo "If you *really really* know what you are doing, move ahead"
+  echo
+  exit 1
+fi
 
 if [ -z $1 ] ; then
   echo "Inform address range (4-byte, cleartext hex)"
@@ -31,7 +33,7 @@ fi
 
 # Function to encode hex to binary
 encode() {
-echo -n "$1" | xxd -r -p
+printf "$1" | xxd -r -p
 }
 
 # High and low address parts
@@ -40,31 +42,26 @@ ADH=0x${1:2:2}
 VALL=0x${2:0:2}
 VALH=0x${2:2:2}
 
-echo $ADL
-echo $ADH
-echo $VALL
-echo $VALH
-
-# Binary encode Address stuff
-BADL=$(encode $ADL)
-BADH=$(encode $ADH)
-BVALL=$(encode $VALL)
-BVALH=$(encode $VALH)
-
 # Encode the checksum - And strip out the exceeding character in checksum sum
 # Avoided the bitwise AND operation because Shell endinanness is not compatible.
 # Sum High, Low and Magic
 CHECK=$(( 0xfb + $ADH + $ADL + $VALH + $VALL + 0xff ))
 
-# Convert it to Hex
-CHECK=$(echo "obase=16; $CHECK" | bc)
+# Convert the Decimal value to Hexadecimal
+CHECK=$(printf "%X" $CHECK)
 
-# Remove the trailing character
+# Encode the Checksum to binary - and strip leading character, use only LSB
 CHECK=$(encode ${CHECK:1})
 
 # The final stream
-STRING="SPW$BADL$BADH$BVALL$BVALH$CHECK;"
+catstring() {
+printf "SPW"
+encode $ADL
+encode $ADH
+encode $VALL
+encode $VALH
+printf "$CHECK;"
+}
 
-echo -n $STRING > /dev/ttyUSB0;
-
-echo -n $STRING | hexdump -C
+catstring | hexdump -C
+catstring > $SERIAL;
