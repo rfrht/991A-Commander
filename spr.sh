@@ -2,6 +2,7 @@
 
 # Thanks to Gil Kloepfer (KI5BPK) for the hard work mapping the
 # FT-991/A address space - and troubleshooting my code!
+# For more information, visit https://www.kloepfer.org/ft991a/memory-map.txt
 
 # Change these to meet your transceiver's config
 SERIAL=/dev/ttyUSB0
@@ -22,28 +23,28 @@ encode() {
 echo -n "$1" | xxd -r -p
 }
 
+# Function to create the CAT SPR command to the radio
+catstring() {
+printf "SPR"
+encode $ADL
+encode $ADH
+printf "$CHECK;"
+}
+
 # High and low address parts
 ADL=0x${1:0:2}
 ADH=0x${1:2:2}
-
-# Translate to binary ADL and ADH
-BADL=$(encode $ADL)
-BADH=$(encode $ADH)
 
 # Encode the checksum - And strip out the exceeding character in checksum sum
 # Avoided the bitwise AND operation because Shell endinanness is not compatible.
 # Sum High, Low and Magic
 CHECK=$(( $ADH + $ADL + 0xf5 ))
 
-# Convert it to Hex
-CHECK=$(echo "obase=16; $CHECK" | bc)
+# Convert the Decimal value to Hexadecimal
+CHECK=$(printf "%X" $CHECK)
 
-# Remove the trailing character
+# Encode the Checksum to binary, use only two least significant bytes
 CHECK=$(encode ${CHECK:1})
 
-# The final stream
-STRING="SPR$BADL$BADH$CHECK;"
-
-echo -n $STRING > /dev/ttyUSB0;
-
-echo -n $STRING | hexdump -C
+catstring | hexdump -C
+catstring > $SERIAL;
