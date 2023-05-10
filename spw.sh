@@ -2,6 +2,7 @@
 
 # Thanks to Gil Kloepfer (KI5BPK) for the hard work mapping the
 # FT-991/A address space - and troubleshooting my code!
+# For more information, visit https://www.kloepfer.org/ft991a/memory-map.txt
 
 if [ -z $IKNOWRIGHT ] ; then
   echo
@@ -50,7 +51,7 @@ CHECK=$(( 0xfb + $ADH + $ADL + $VALH + $VALL + 0xff ))
 # Convert the Decimal value to Hexadecimal
 CHECK=$(printf "%X" $CHECK)
 
-# Encode the Checksum to binary - and strip leading character, use only LSB
+# Encode the Checksum to binary, use only two least significant bytes
 CHECK=$(encode ${CHECK:1})
 
 # The final stream
