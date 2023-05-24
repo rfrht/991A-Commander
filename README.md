@@ -9,7 +9,7 @@ A **very** powerful tool that can other than **permanently destroy and brick you
 [Gil Kloepfer](https://www.qrz.com/db/KI5BPK) [mapped](https://www.kloepfer.org/ft991a/memory-map.txt) the FT-991 address space, and by reading content (and carefully writing memory segments), you can extend significantly the control possibilities if your FT-991A.
 
 ## SPR
-The `spr.sh` tool reads the content from a given memory address. Specify the address to be read as the only argument. The value is hexadecimal and **must contain 4 characters**.
+The `spr.sh` tool reads **two bytes** from a given memory address. Specify the address to be read as the only argument. The value is hexadecimal and **must contain 4 characters**.
 
 ### Example
 To read the `012A` memory address:
@@ -17,8 +17,10 @@ To read the `012A` memory address:
 ./spr.sh 012A
 ~~~
 
+Notice that SPR returns two bytes. On the above example you got the result from 012A to 012B. For a next contiguous read, do a `spr.sh` to the address 012C and so forth.
+
 ## SPW
-The `spw.sh` tool writes two bytes in a given memory address. This command takes two arguments: The first argument is the memory address, and the second argument is the value to be written. All values are hexadecimal and **must contain 4 characters**.
+The `spw.sh` tool writes **two bytes** in a given memory address. This command takes two arguments: The first argument is the memory address, and the second argument is the value to be written. All values are hexadecimal and **must contain 4 characters** - in hexadecimal notation.
 
 ### Example
 To write 0073 to address 012A:
