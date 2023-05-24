@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Thanks to Gil Kloepfer (KI5BPK) for the hard work mapping the
 # FT-991/A address space - and troubleshooting my code!
@@ -28,7 +28,7 @@ catstring() {
 printf "SPR"
 encode $ADL
 encode $ADH
-printf "$CHECK;"
+echo -n "$CHECK;"
 }
 
 # High and low address parts
