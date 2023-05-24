@@ -1,9 +1,9 @@
 # FT-991A-Commander
-A **very** rudimentary FT-991 status monitor using the CAT interface. Also implements protection lowering TX power if HI SWR is spotted.
+A **very** rudimentary Yaesu FT-991/A status monitor using the CAT interface. Also implements protection lowering TX power if HI SWR is spotted.
 
 Also: Dumps and restores the radio configuration and memories via the `--backup` or `--restore` parameters.
 
-# SPR and SPW utilities
+# Yaesu FT-991A SPR and SPW utilities
 A **very** powerful tool that can other than **permanently destroy and brick your expensive transceiver**; read and directly write memory segments of the FT-991A, virtually allowing to control every aspect of the radio - even without a standard CAT command. Proceed at your own risk.
 
 [Gil Kloepfer](https://www.qrz.com/db/KI5BPK) [mapped](https://www.kloepfer.org/ft991a/memory-map.txt) the FT-991 address space, and by reading content (and carefully writing memory segments), you can extend significantly the control possibilities if your FT-991A.
