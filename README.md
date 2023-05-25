@@ -39,7 +39,7 @@ By reading Gil's map, we can see that the screen mode is defined on address `012
 [root@rf ~]# cat /dev/ttyUSB0 | hexdump -C -n 9
 ~~~
 
-Now open a second console, and read the `012A` address space contents:
+Now open a second console, and read the `012A` address space contents. **HINT:** Run it twice, so the result can show on the other terminal.
 
 ~~~
 [root@rf 991a-commander]# ./spr.sh 012A
