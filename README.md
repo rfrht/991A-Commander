@@ -76,3 +76,60 @@ And conversely, to recall the buttons mode, use `./spw.sh 012a 8073`
 Be careful, take note of the values and remember that any typo can be **fatal**. The provided code has no safeguards.
 
 Happy hacking!
+
+## Using it on Windows
+I wanted some commands to set the encoder mode to `CH-DIAL` mode while in VFO mode, and `MCH` mode while in memory mode - [so I could use it](https://github.com/rfrht/Voicemeeter-FT-991A/commit/298445b72fac669dde69d7dbf635612c3fad2dfe) in my VoiceMeeter automation.
+
+The first step was to find out the memory address. For VFO mode, it's the address `0149`. The `CH-DIAL` memory value is `1f`. So, by running `./spw.sh 0149 1f1f` I got this sequence:
+
+~~~
+53 50 57 01 49 1f 1f 82 3b
+~~~
+
+Now - let's create a binary file containing this sequence on the Windows machine. Open your `cmd` prompt and type:
+
+~~~
+>ch-dial.txt echo(53 50 57 01 49 1f 1f 82 3b
+~~~
+
+Yes - the command starts with an `>` and the echo command **doesn't have** a closing parenthesis. Next step, let's convert it to a binary file using the `certutil` tool:
+
+~~~
+certutil -decodehex ch-dial.txt ch-dial.bin
+~~~
+
+That will result in a short file named `ch-dial.bin`. You can validate its content by viewing its content using `type ch-dial.bin`. The file should contain a SPW, a happy face, I, two arrows down, é and semicolon.
+
+Now it's time to send it to the radio. Suppose your COM port is `COM7`, 38,400 bps, set the COM port:
+
+~~~
+mode COM7 BAUD=38400 PARITY=n DATA=8
+~~~
+
+Put your radio on VFO mode, and hit a different button **other than** `CH-DIAL` on your radio, such as, `MIC GAIN`. Your encoder at this point should be commanding the microphone gain. And then type:
+
+~~~
+type ch-dial.bin > COM7
+~~~
+
+Then the magic should happen: Your encoder should move to the `CH-DIAL` mode.
+
+A final nugget, setting the encoder to `MCH` mode when in **MEMORY** mode. This is the code:
+
+~~~
+>mch.txt echo(53 50 57 01 4e 35 35 b3 3b
+~~~
+
+Encode it:
+
+~~~
+certutil -decodehex mch.txt mch.bin
+~~~
+
+And then put it to run. Move the radio to Memory mode, select any other encoder function than `MCH`, and finally:
+
+~~~
+type mch.bin > COM7
+~~~
+
+And your encoder will flip to MCH mode.
