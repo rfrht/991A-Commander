@@ -135,3 +135,5 @@ type mch.bin > COM7
 ~~~
 
 And your encoder will flip to MCH mode.
+
+![yay!](https://rf3.org:8443/q/wink-spr.png)
